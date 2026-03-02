@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elite Watch Store</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial, sans-serif;
+}
+
+body{
+background:#f1f3f6;
+}
+
+body.no-scroll{
+overflow:hidden;
+}
+
+/* Navbar */
+nav{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 40px;
+background:#111;
+color:white;
+}
+
+nav h1{
+color:gold;
+font-size:22px;
+}
+
+nav input{
+padding:6px 10px;
+border-radius:6px;
+border:none;
+}
+
+.cart-btn{
+cursor:pointer;
+background:gold;
+padding:6px 12px;
+border-radius:6px;
+color:black;
+font-weight:bold;
+}
+
+/* Product Grid */
+.products{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:20px;
+padding:30px;
+}
+
+/* Small Product Card */
+.card{
+background:white;
+padding:15px;
+border-radius:12px;
+box-shadow:0 4px 10px rgba(0,0,0,0.08);
+text-align:center;
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-5px);
+}
+
+.card img{
+width:100%;
+height:160px;
+object-fit:cover;
+border-radius:10px;
+}
+
+.card h3{
+font-size:15px;
+margin-top:8px;
+}
+
+.card p{
+font-weight:bold;
+margin:5px 0;
+}
+
+.card button{
+padding:6px 12px;
+border:none;
+background:#111;
+color:white;
+border-radius:6px;
+cursor:pointer;
+font-size:13px;
+}
+
+.card button:hover{
+background:gold;
+color:black;
+}
+
+/* Cart Drawer */
+.cart-drawer{
+position:fixed;
+right:-400px;
+top:0;
+width:340px;
+height:100%;
+background:white;
+box-shadow:-5px 0 15px rgba(0,0,0,0.2);
+padding:20px;
+transition:0.4s;
+overflow-y:auto;
+z-index:1001;
+}
+
+.cart-drawer.active{
+right:0;
+}
+
+.cart-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:15px;
+}
+
+.cart-header button{
+background:none;
+border:none;
+font-size:20px;
+cursor:pointer;
+}
+
+/* Small Cart Card */
+.cart-item{
+display:flex;
+gap:10px;
+background:#f9f9f9;
+padding:10px;
+border-radius:10px;
+margin-bottom:10px;
+align-items:center;
+}
+
+.cart-item img{
+width:60px;
+height:60px;
+object-fit:cover;
+border-radius:8px;
+}
+
+.cart-details{
+flex:1;
+font-size:13px;
+}
+
+.cart-details h4{
+font-size:14px;
+margin-bottom:3px;
+}
+
+.cart-controls{
+display:flex;
+gap:5px;
+margin-top:5px;
+}
+
+.cart-controls button{
+padding:2px 6px;
+border:none;
+background:#111;
+color:white;
+border-radius:4px;
+cursor:pointer;
+font-size:12px;
+}
+
+.cart-controls button:hover{
+background:gold;
+color:black;
+}
+
+.total{
+margin-top:15px;
+font-weight:bold;
+}
+
+/* Overlay */
+.overlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+backdrop-filter:blur(3px);
+opacity:0;
+visibility:hidden;
+transition:0.3s;
+z-index:1000;
+}
+
+.overlay.active{
+opacity:1;
+visibility:visible;
+}
+
+@media(max-width:500px){
+.cart-drawer{
+width:100%;
+}
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+<h1>⌚ Elite Watches</h1>
+<input type="text" id="search" placeholder="Search...">
+<div class="cart-btn" onclick="toggleCart()">🛒 (<span id="cart-count">0</span>)</div>
+</nav>
+
+<section class="products" id="product-list"></section>
+
+<div class="cart-drawer" id="cart">
+<div class="cart-header">
+<h2>My Cart</h2>
+<button onclick="toggleCart()">✖</button>
+</div>
+
+<div id="cart-items"></div>
+<p class="total">Total: ₹<span id="total-price">0</span></p>
+<button onclick="clearCart()">Clear Cart</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleCart()"></div>
+
+<script>
+const products=[
+{id:1,name:"Classic Black",price:4999,img:"https://images.unsplash.com/photo-1523275335684-37898b6baf30"},
+{id:2,name:"Luxury Gold",price:9999,img:"https://images.unsplash.com/photo-1547996160-81dfa63595aa"},
+{id:3,name:"Silver Steel",price:6999,img:""},
+{id:4,name:"Sport Edition",price:7999,img:""},
+{id:5,name:"Classic Black",price:4999,img:"https://images.unsplash.com/photo-1523275335684-37898b6baf30"},
+{id:6,name:"Luxury Gold",price:9999,img:"https://images.unsplash.com/photo-1547996160-81dfa63595aa"},
+{id:7,name:"Silver Steel",price:6999,img:""},
+{id:8,name:"Sport Edition",price:7999,img:""},
+{id:9,name:"Classic Black",price:4999,img:"https://images.unsplash.com/photo-1523275335684-37898b6baf30"},
+{id:10,name:"Luxury Gold",price:9999,img:"https://images.unsplash.com/photo-1547996160-81dfa63595aa"},
+{id:11,name:"Silver Steel",price:6999,img:""},
+{id:412,name:"Sport Edition",price:7999,img:""}
+];
+
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
+
+function displayProducts(filter=""){
+const list=document.getElementById("product-list");
+list.innerHTML="";
+products
+.filter(p=>p.name.toLowerCase().includes(filter.toLowerCase()))
+.forEach(product=>{
+list.innerHTML+=`
+<div class="card">
+<img src="${product.img}">
+<h3>${product.name}</h3>
+<p>₹${product.price}</p>
+<button onclick="addToCart(${product.id})">Add</button>
+</div>`;
+});
+}
+
+function addToCart(id){
+const item=cart.find(p=>p.id===id);
+if(item){item.qty++;}
+else{
+const product=products.find(p=>p.id===id);
+cart.push({...product,qty:1});
+}
+updateCart();
+}
+
+function updateCart(){
+localStorage.setItem("cart",JSON.stringify(cart));
+document.getElementById("cart-count").innerText=
+cart.reduce((sum,i)=>sum+i.qty,0);
+
+const cartItems=document.getElementById("cart-items");
+cartItems.innerHTML="";
+let total=0;
+
+cart.forEach(item=>{
+total+=item.price*item.qty;
+cartItems.innerHTML+=`
+<div class="cart-item">
+<img src="${item.img}">
+<div class="cart-details">
+<h4>${item.name}</h4>
+<p>₹${item.price} × ${item.qty}</p>
+<div class="cart-controls">
+<button onclick="changeQty(${item.id},-1)">-</button>
+<button onclick="changeQty(${item.id},1)">+</button>
+<button onclick="removeItem(${item.id})">x</button>
+</div>
+</div>
+</div>`;
+});
+
+document.getElementById("total-price").innerText=total;
+}
+
+function changeQty(id,change){
+const item=cart.find(p=>p.id===id);
+item.qty+=change;
+if(item.qty<=0){
+cart=cart.filter(p=>p.id!==id);
+}
+updateCart();
+}
+
+function removeItem(id){
+cart=cart.filter(p=>p.id!==id);
+updateCart();
+}
+
+function clearCart(){
+cart=[];
+updateCart();
+}
+
+function toggleCart(){
+document.getElementById("cart").classList.toggle("active");
+document.getElementById("overlay").classList.toggle("active");
+document.body.classList.toggle("no-scroll");
+}
+
+document.addEventListener("keydown",e=>{
+if(e.key==="Escape"){
+if(document.getElementById("cart").classList.contains("active")){
+toggleCart();
+}
+}
+});
+
+document.getElementById("search").addEventListener("input",e=>{
+displayProducts(e.target.value);
+});
+
+displayProducts();
+updateCart();
+</script>
+
+</body>
+</html>
